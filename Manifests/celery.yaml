@@ -1,0 +1,47 @@
+services:
+  celery:
+    image: 
+    entrypoint: celery -A celery_app worker --loglevel=info --hostname=worker1@%h --max-memory-per-child=512000 --max-tasks-per-child=100 --without-heartbeat --concurrency=2
+    env_file:
+      - ${HOME}/config/env/fluent-flask.env
+    environment:
+      # Memory optimization environment variables
+      - PYTHONMALLOC=pymalloc
+      - PYTHONUNBUFFERED=1
+      - PYTHONOPTIMIZE=1
+      - PYTHONDONTWRITEBYTECODE=1
+      # Celery-specific optimizations
+      - CELERY_OPTIMIZATION=true
+    networks:
+      - web2
+    volumes:
+      - /mnt/data/fluent/flask/data:/app/logs
+      - /mnt/data/fluent/data:/shared/storage # shared storage within fluent and celery for file processing
+    secrets:
+      - fluent_db_password
+      - fluent_mongodb_password
+      - fluent_pusher_app_secret
+    deploy:
+      replicas: 1
+      restart_policy: 
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          memory: 2G
+      labels:
+        - traefik.enable=false
+
+networks:
+  web2:
+    external: true
+
+secrets:
+  fluent_db_password:
+    external: true
+  fluent_mongodb_password:
+    external: true
+  fluent_pusher_app_secret:
+    external: true

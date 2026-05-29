@@ -1,0 +1,4 @@
+# Docker infra — dados de volume locais (não versionar)
+# No servidor: volumes vazios; migrations criam schema
+
+data/

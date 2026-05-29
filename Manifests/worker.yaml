@@ -1,0 +1,60 @@
+services:
+  worker:
+    image: hub.connoisseur-suite.co.uk/production/fluent-worker
+    entrypoint: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--memory=512", "--timeout=90"]
+    networks:
+      - web2
+    secrets:
+      - fluent_app_key
+      - fluent_db_password
+      - fluent_db_password_act
+      - fluent_db_password_express
+      - fluent_db_password_fast
+      - fluent_db_password_impress
+      - fluent_postmark_token
+      - fluent_pusher_app_secret
+      - fluent_google_client_secret
+      - fluent_mongodb_password
+    volumes:
+      - /mnt/data/fluent/data:/app/storage
+    deploy:
+      replicas: 5
+      update_config:
+        parallelism: 0
+        delay: 0s
+      restart_policy: 
+        condition: any
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - traefik.enable=false
+      resources:
+        limits:
+          memory: 512M
+
+networks:
+  web2:
+    external: true
+
+secrets:
+  fluent_app_key:
+    external: true
+  fluent_db_password:
+    external: true
+  fluent_db_password_act:
+    external: true
+  fluent_db_password_express:
+    external: true
+  fluent_db_password_fast:
+    external: true
+  fluent_db_password_impress:
+    external: true
+  fluent_postmark_token:
+    external: true
+  fluent_pusher_app_secret:
+    external: true
+  fluent_google_client_secret:
+    external: true
+  fluent_mongodb_password:
+    external: true

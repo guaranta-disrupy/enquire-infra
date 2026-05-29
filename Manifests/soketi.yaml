@@ -1,0 +1,34 @@
+services:
+  soketi:
+    image: 'quay.io/soketi/soketi:0.34-16-debian'
+    networks:
+      - web2
+    env_file:
+      - ${HOME}/config/env/soketi.env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "0.0.0.0:6001"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+    deploy:
+      replicas: 1
+      restart_policy: 
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          memory: 1G
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.ws_soketi.rule=Host(`ws.connoisseur-suite.com`)
+        - traefik.http.routers.ws_soketi.entrypoints=websecure
+        - traefik.http.routers.ws_soketi.tls=true
+        - traefik.http.routers.ws_soketi.tls.certresolver=production
+        - traefik.http.services.ws_soketi.loadbalancer.server.port=6001
+
+networks:
+  web2:
+    external: true

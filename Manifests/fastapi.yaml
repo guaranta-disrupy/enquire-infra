@@ -1,0 +1,45 @@
+services:
+  flask:
+    image: hub.connoisseur-suite.co.uk/production/fluent-flask
+      - ${HOME}/config/production/fluent-flask.env
+    networks:
+      - web2
+    volumes:
+      - /mnt/data/fluent/flask/data:/app/logs
+      - /mnt/data/fluent/data:/app/storage # shared storage within fluent and celery for file processing
+    secrets:
+      - fluent_db_password
+      - fluent_mongodb_password
+      - fluent_pusher_app_secret
+      - fluent_db_password_act
+    deploy:
+      replicas: 2
+      restart_policy: 
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          memory: 2G
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.fluent_flask.rule=Host(`fluent-flask.connoisseur-suite.com`)
+        - traefik.http.routers.fluent_flask.entrypoints=websecure
+        - traefik.http.routers.fluent_flask.tls=true
+        - traefik.http.routers.fluent_flask.tls.certresolver=production
+        - traefik.http.services.fluent_flask.loadbalancer.server.port=5001
+
+networks:
+  web2:
+    external: true
+
+secrets:
+  fluent_db_password:
+    external: true
+  fluent_mongodb_password:
+    external: true
+  fluent_pusher_app_secret:
+    external: true
+  fluent_db_password_act:
+    external: true

@@ -1,0 +1,54 @@
+# ════════════════════════════════════════════════════════════════
+#  enquire-infra — orquestração local + docs + manifests
+#
+#  Este repo cobre APENAS:
+#    - docker/                     (infra Docker para dev local)
+#    - Manifests/                  (manifests Docker Swarm de produção)
+#    - docker-compose.infra.yml    (subir BDs/cache/etc localmente)
+#    - populate_survey_mt_maceio.py (script utilitário de import)
+#    - *.md                        (INICIALIZACAO_LOCAL, MIGRACAO_GIT_SERVIDOR, GITIGNORE, REVIEW_LATER)
+#    - bootstrap.sh                (clone de todos os repos no VPS — a criar)
+#
+#  Os serviços abaixo são REPOS GIT SEPARADOS — não fazem parte deste repo.
+#  Cada um tem o seu próprio .gitignore.
+# ════════════════════════════════════════════════════════════════
+
+# ---- Subpastas de serviço (repos próprios — não tracking aqui) ----
+fluent/
+fluent-engine/
+fluent-flask/
+act_express/
+express-engine/
+
+# ---- Dados Docker locais (volumes de BD/Redis/Mongo/Neo4j) ----
+docker/data/
+docker/data/**
+
+# ---- Segredos e ambiente (NUNCA commitar) ----
+.env
+*.env
+**/.env
+**/.env.*
+!**/.env.example
+Env/
+act.env
+express.env
+enviroment.md
+environment.md
+
+# ---- IDE / SO / agentes ----
+.idea/
+.vscode/
+.claude/
+.DS_Store
+**/.DS_Store
+**/.fleet
+**/.nova
+**/.zed
+**/.phpactor.json
+
+# ---- Lixo de transferência (NTFS Zone.Identifier) ----
+*:Zone.Identifier
+
+# ---- Workspace VSCode (local) ----
+Enquire_Fluent.code-workspace

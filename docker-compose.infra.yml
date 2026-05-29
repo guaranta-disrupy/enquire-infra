@@ -1,0 +1,64 @@
+# Infra local para Fluent: PHP/Composer rodam no Mac; estes serviços expõem portas em localhost.
+#
+# Uso:
+#   docker compose -f docker-compose.infra.yml up -d
+#   docker compose -f docker-compose.infra.yml down
+#
+# Laravel (.env): DB_HOST=127.0.0.1  DB_PORT=3306  DB_DATABASE=fluent (ou fluent_engine no engine)
+# Mongo: MONGODB_URI=mongodb://127.0.0.1:27017  MONGODB_DATABASE=fluent
+# Redis: REDIS_HOST=127.0.0.1  REDIS_PORT=6379
+# Neo4j: NEO4J_URI=bolt://127.0.0.1:7687  NEO4J_USERNAME=neo4j  NEO4J_PASSWORD=fluent_local_dev
+
+services:
+  mariadb:
+    image: mariadb:11
+    container_name: fluent-infra-mariadb
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MARIADB_ROOT_PASSWORD: secret
+      MARIADB_USER: local
+      MARIADB_PASSWORD: secret
+      MARIADB_DATABASE: fluent
+    volumes:
+      - ./docker/data/mariadb:/var/lib/mysql
+      - ./docker/infra/init-databases.sql:/docker-entrypoint-initdb.d/01-init-databases.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mongodb:
+    image: mongo:7
+    container_name: fluent-infra-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./docker/data/mongodb:/data/db
+    command: ["mongod", "--bind_ip_all"]
+
+  redis:
+    image: redis:7-alpine
+    container_name: fluent-infra-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./docker/data/redis:/data
+    command: ["redis-server", "--appendonly", "yes"]
+
+  neo4j:
+    image: neo4j:5
+    container_name: fluent-infra-neo4j
+    restart: unless-stopped
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      NEO4J_AUTH: neo4j/fluent_local_dev
+      NEO4J_server_memory_heap_max__size: 512m
+    volumes:
+      - ./docker/data/neo4j:/data

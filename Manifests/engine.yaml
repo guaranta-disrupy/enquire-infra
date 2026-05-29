@@ -1,0 +1,64 @@
+services:
+  engine:
+    image: 
+    volumes:
+      - /mnt/data/fluent-engine/data:/app/storage
+    secrets:
+      - fluent_app_key
+      - fluent_db_password
+      - fluent_db_password_act
+      - fluent_db_password_express
+      - fluent_db_password_fast
+      - fluent_db_password_impress
+      - fluent_postmark_token
+      - fluent_pusher_app_secret
+      - fluent_google_client_secret
+      - fluent_mongodb_password
+    networks:
+      - web2
+    deploy:
+      replicas: 3
+      update_config:
+        parallelism: 0
+        delay: 0s
+      restart_policy: 
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          memory: 2G
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.fluent_engine.rule=Host(`e.connoisseur-suite.com`)
+        - traefik.http.routers.fluent_engine.entrypoints=websecure
+        - traefik.http.routers.fluent_engine.tls=true
+        - traefik.http.routers.fluent_engine.tls.certresolver=production
+        - traefik.http.services.fluent_engine.loadbalancer.server.port=9000
+
+networks:
+  web2:
+    external: true
+
+secrets:
+  fluent_app_key:
+    external: true
+  fluent_db_password:
+    external: true
+  fluent_postmark_token:
+    external: true
+  fluent_db_password_act:
+    external: true
+  fluent_db_password_express:
+    external: true
+  fluent_db_password_fast:
+    external: true
+  fluent_db_password_impress:
+    external: true
+  fluent_pusher_app_secret:
+    external: true
+  fluent_google_client_secret:
+    external: true
+  fluent_mongodb_password:
+    external: true
