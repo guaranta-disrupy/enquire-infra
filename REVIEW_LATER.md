@@ -142,6 +142,12 @@ Patch usado: `/tmp/missing-vps/patch-fluent-cols.sql` no Mac local.
 - Removidos durante setup multi-repo
 - Verificar se o app referencia URLs `/fluent-storage/...` (provavelmente não, mas grep para ter certeza)
 
+### 22. Teams criados via SQL precisam `config={"status":"active"}`
+- [resources/js/Pages/Projects/Index.vue:536](fluent/resources/js/Pages/Projects/Index.vue#L536) lê `project.config.status` SEM optional chaining
+- Se um team é criado direto via SQL (sem default), `config IS NULL` → frontend quebra com `Cannot read properties of null (reading 'status')` ao listar Projects
+- Sempre criar team com: `INSERT INTO teams (..., config) VALUES (..., '{"status":"active"}')`
+- Solução proper: mudar para `project.config?.status` (optional chaining) em Index.vue:536 e :537
+
 ---
 
 ## Workarounds adicionais (no código novo, não no produto)
