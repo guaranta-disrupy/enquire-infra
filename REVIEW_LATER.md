@@ -62,10 +62,20 @@ Itens identificados durante o setup multi-repo + deploy VPS Contabo. Não bloque
 - Patch SQL para fresh install: `/tmp/missing-vps/patch-act.sql` (extraído via `SHOW CREATE TABLE` do banco local)
 - Solução: criar arquivo de migration no `act_express/act/database/migrations/` com o schema correto
 
-### 9. Coluna `deleted_at` em `fluent.users`
-- Necessária para o Express/ACT (User model usa SoftDeletes via mysql_auth)
-- Hoje adicionada via `ALTER TABLE users ADD COLUMN deleted_at TIMESTAMP NULL` no VPS
-- Solução: criar migration no `fluent/database/migrations/`
+### 9. Colunas faltantes em tabelas `fluent.*` (não-commitadas no repo)
+
+Todas adicionadas manualmente no banco local em algum ponto, sem migration. No VPS precisaram ser patched via SQL. **Solução: criar migrations no `fluent/database/migrations/` consolidando todas:**
+
+| Tabela | Coluna | Tipo | Necessária para |
+|---|---|---|---|
+| `users` | `deleted_at` | timestamp NULL | Express/ACT SoftDeletes via mysql_auth |
+| `logs` | `data` | longtext JSON | RouteController::store → Auth::user()->logs()->create |
+| `merge_groups` | `user_id` | bigint(20) unsigned | (controller que cria merge_groups) |
+| `records` | `links_list` | longtext JSON | Routing engine (preview) |
+| `records` | `links_status` | longtext JSON | Routing engine (preview) |
+| `routes` | `links` | longtext JSON | RouteController::store (stations) |
+
+Patch usado: `/tmp/missing-vps/patch-fluent-cols.sql` no Mac local.
 
 ### 10. `init-databases.sql` mismatch
 - Criava `fluent_engine` (não usado) em vez de `fluent_express`
