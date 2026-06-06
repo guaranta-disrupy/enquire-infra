@@ -142,7 +142,14 @@ Patch usado: `/tmp/missing-vps/patch-fluent-cols.sql` no Mac local.
 - Removidos durante setup multi-repo
 - Verificar se o app referencia URLs `/fluent-storage/...` (provavelmente não, mas grep para ter certeza)
 
-### 22. Teams criados via SQL precisam `config={"status":"active"}`
+### 22. `surveys.folder_id` tipo errado (bigint em vez de char(26))
+- `folders.id` é `char(26)` (ULID), `surveys.folder_id` era `bigint(20) unsigned` → mismatch
+- Bug latente: NUNCA foi testado criar survey dentro de folder localmente (sempre criavam no root)
+- VPS expôs ao primeiro teste real (`SQLSTATE[01000] Data truncated for column 'folder_id'`)
+- Fix aplicado tanto no VPS quanto no local: `ALTER TABLE surveys MODIFY COLUMN folder_id CHAR(26) NULL DEFAULT NULL`
+- Solução proper: criar migration `add_folder_id_as_ulid_to_surveys_table` que faça essa mudança
+
+### 23. Teams criados via SQL precisam `config={"status":"active"}`
 - [resources/js/Pages/Projects/Index.vue:536](fluent/resources/js/Pages/Projects/Index.vue#L536) lê `project.config.status` SEM optional chaining
 - Se um team é criado direto via SQL (sem default), `config IS NULL` → frontend quebra com `Cannot read properties of null (reading 'status')` ao listar Projects
 - Sempre criar team com: `INSERT INTO teams (..., config) VALUES (..., '{"status":"active"}')`
