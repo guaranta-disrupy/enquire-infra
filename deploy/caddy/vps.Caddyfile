@@ -1,0 +1,38 @@
+# Caddyfile do VPS — copiado para /etc/caddy/Caddyfile no deploy.
+# Variáveis de enquire.caddy vêm de vps.env (EnvironmentFile no drop-in
+# /etc/systemd/system/caddy.service.d/enquire.conf).
+{
+	# A porta 80 ainda é do nginx; os certificados saem pelo desafio TLS-ALPN na 443.
+	auto_https disable_redirects
+}
+
+# --- Produtos TNG -----------------------------------------------------------
+report.nextsensus.com {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:8005
+}
+
+pricing.nextsensus.com {
+	encode zstd gzip
+	request_body {
+		max_size 5MB
+	}
+	reverse_proxy 127.0.0.1:8006
+}
+
+field.nextsensus.com {
+	encode zstd gzip
+	request_body {
+		max_size 25MB
+	}
+	reverse_proxy 127.0.0.1:8007
+}
+
+# Acesso antigo do TNG Report pelo IP (certificado autoassinado).
+https://161.97.178.169 {
+	tls internal
+	reverse_proxy 127.0.0.1:8005
+}
+
+# --- Enquire / Fluent ------------------------------------------------------
+import /var/www/enquire-infra/deploy/caddy/enquire.caddy
