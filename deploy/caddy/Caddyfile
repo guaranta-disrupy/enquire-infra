@@ -1,0 +1,100 @@
+# Enquire / Fluent — reverse proxy único (Caddy).
+#
+# Dois nomes públicos:
+#   {$APP_HOST}     equipe: Fluent + ACT (/act) + Express (/express) + Flask (/svc)
+#   {$SURVEY_HOST}  respondentes: Engine + Express Engine (/x) + API pública do Express
+#
+# ACT, Express e Flask NÃO têm domínio próprio: escutam só em 127.0.0.1 e são
+# alcançados por sub-caminho. As telas deles exigem sessão válida no Fluent
+# (forward_auth); ficam abertas só as APIs com token próprio e o que o
+# respondente precisa.
+#
+# Variáveis: ver local.env (Mac) e vps.env (servidor).
+
+{
+	{$CADDY_GLOBAL}
+}
+
+# Sessão do Fluent como porteiro para as requisições do matcher {args[0]}:
+# 2xx libera, senão devolve a resposta do Fluent (302 /login, ou 401 em XHR).
+(fluent_session_if) {
+	forward_auth {args[0]} {$FLUENT_UPSTREAM} {
+		uri /user/confirmed-password-status
+	}
+}
+
+{$APP_HOST} {
+	{$TLS}
+	encode zstd gzip
+
+	redir /act /act/ 308
+	redir /express /express/ 308
+	redir /svc /svc/ 308
+
+	# --- ACT --------------------------------------------------------------
+	# Abertos: API (bearer token do Fluent) e assets do build.
+	@act_gated {
+		path /act/*
+		not path /act/api/* /act/build/*
+	}
+	route /act/* {
+		import fluent_session_if @act_gated
+		uri strip_prefix /act
+		reverse_proxy {$ACT_UPSTREAM} {
+			header_up X-Forwarded-Prefix /act
+		}
+	}
+
+	# --- Express ----------------------------------------------------------
+	# Abertos: API, assets e mídia da galeria (as perguntas embutem essas URLs
+	# e o respondente as carrega).
+	@express_gated {
+		path /express/*
+		not path /express/api/* /express/build/* /express/gallery/* /express/image /express/video /express/storage/*
+	}
+	route /express/* {
+		import fluent_session_if @express_gated
+		uri strip_prefix /express
+		reverse_proxy {$EXPRESS_UPSTREAM} {
+			header_up X-Forwarded-Prefix /express
+		}
+	}
+
+	# --- Flask (FastAPI) --------------------------------------------------
+	# Navegador: exige sessão. Servidor (jobs do Fluent): liberado por IP.
+	@svc_gated {
+		path /svc/*
+		not remote_ip {$SERVER_IPS}
+	}
+	route /svc/* {
+		import fluent_session_if @svc_gated
+		uri strip_prefix /svc
+		reverse_proxy {$FLASK_UPSTREAM}
+	}
+
+	# --- Fluent -----------------------------------------------------------
+	reverse_proxy {$FLUENT_UPSTREAM}
+}
+
+{$SURVEY_HOST} {
+	{$TLS}
+	encode zstd gzip
+
+	# API pública do Express usada pelo Express Engine (VUE_APP_API).
+	handle /api/f8208271af* {
+		reverse_proxy {$EXPRESS_UPSTREAM}
+	}
+
+	# Express Engine (SPA estática, build com VUE_APP_PUBLIC_PATH=/x/).
+	redir /x /x/ 308
+	handle_path /x/* {
+		root * {$EXPRESS_ENGINE_DIST}
+		try_files {path} /index.html
+		file_server
+	}
+
+	# Engine (links /e/t, /e/cp, /preview/...).
+	handle {
+		reverse_proxy {$ENGINE_UPSTREAM}
+	}
+}
