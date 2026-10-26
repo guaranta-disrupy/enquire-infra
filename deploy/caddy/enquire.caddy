@@ -77,6 +77,11 @@
 	{$TLS}
 	encode zstd gzip
 
+	# Telas finais do respondente (concluído, screen-out, survey fechada): o
+	# Engine redireciona para APP_URL/engine/display/..., mas quem as renderiza
+	# é o Fluent. Sem isto o Engine redireciona para si mesmo em loop.
+	redir /engine/display/* https://{$APP_HOST}{uri} 302
+
 	# API pública do Express usada pelo Express Engine (VUE_APP_API).
 	handle /api/f8208271af* {
 		reverse_proxy {$EXPRESS_UPSTREAM}
