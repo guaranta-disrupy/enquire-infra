@@ -1,0 +1,14 @@
+# Enquire / Fluent — reverse proxy único (Caddy).
+#
+# Dois nomes públicos:
+#   {$APP_HOST}     equipe: Fluent + ACT (/act) + Express (/express) + Flask (/svc)
+#   {$SURVEY_HOST}  respondentes: Engine + Express Engine (/x) + API pública do Express
+#
+# ACT, Express e Flask NÃO têm domínio próprio: escutam só em 127.0.0.1 e são
+# alcançados por sub-caminho. As telas deles exigem sessão válida no Fluent
+# (forward_auth); ficam abertas só as APIs com token próprio e o que o
+# respondente precisa.
+#
+# Variáveis: ver local.env (Mac) e vps.env (servidor).
+# Importado por Caddyfile (local) e vps.Caddyfile (servidor).
+
