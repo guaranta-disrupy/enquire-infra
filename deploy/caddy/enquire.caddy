@@ -24,9 +24,9 @@
 	{$TLS}
 	encode zstd gzip
 
-	redir /act /act/ 308
-	redir /express /express/ 308
-	redir /svc /svc/ 308
+	redir /act /act/?{query} 308
+	redir /express /express/?{query} 308
+	redir /svc /svc/?{query} 308
 
 	# --- ACT --------------------------------------------------------------
 	# Abertos: API (bearer token do Fluent) e assets do build.
@@ -88,7 +88,7 @@
 	}
 
 	# Express Engine (SPA estática, build com VUE_APP_PUBLIC_PATH=/x/).
-	redir /x /x/ 308
+	redir /x /x/?{query} 308
 	handle_path /x/* {
 		root * {$EXPRESS_ENGINE_DIST}
 		try_files {path} /index.html
