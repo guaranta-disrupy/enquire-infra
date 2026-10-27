@@ -2,8 +2,11 @@
 # Variáveis de enquire.caddy vêm de vps.env (EnvironmentFile no drop-in
 # /etc/systemd/system/caddy.service.d/enquire.conf).
 {
-	# A porta 80 ainda é do nginx; os certificados saem pelo desafio TLS-ALPN na 443.
-	auto_https disable_redirects
+	# Os sites internos do php-fpm (php.caddy) recebem do próprio Caddy: mantém
+	# X-Forwarded-Proto/For/Host vindos de 127.0.0.1.
+	servers {
+		trusted_proxies static 127.0.0.1/32 ::1/128
+	}
 }
 
 # --- Produtos TNG -----------------------------------------------------------
@@ -36,3 +39,4 @@ https://161.97.178.169 {
 
 # --- Enquire / Fluent ------------------------------------------------------
 import /var/www/enquire-infra/deploy/caddy/enquire.caddy
+import /var/www/enquire-infra/deploy/caddy/php.caddy
