@@ -41,6 +41,7 @@ field.nextsensus.com {
 		# O service worker e o manifest não podem ficar presos em cache.
 		@sw path /sw.js /manifest.webmanifest /index.html
 		header @sw Cache-Control "no-cache"
+		header /manifest.webmanifest Content-Type application/manifest+json
 		try_files {path} /index.html
 		file_server
 	}
