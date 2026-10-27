@@ -28,7 +28,22 @@ field.nextsensus.com {
 	request_body {
 		max_size 25MB
 	}
-	reverse_proxy 127.0.0.1:8007
+
+	# Backend (Django-Ninja): API, admin e estáticos do admin.
+	@backend path /api/* /admin /admin/* /static/*
+	handle @backend {
+		reverse_proxy 127.0.0.1:8007
+	}
+
+	# App (PWA estático, build de tng-fieldwork-app em /var/www/tng-fieldwork-web).
+	handle {
+		root * /var/www/tng-fieldwork-web
+		# O service worker e o manifest não podem ficar presos em cache.
+		@sw path /sw.js /manifest.webmanifest /index.html
+		header @sw Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
 }
 
 # Acesso antigo do TNG Report pelo IP (certificado autoassinado).
