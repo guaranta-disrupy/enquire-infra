@@ -29,10 +29,11 @@
 	redir /svc /svc/?{query} 308
 
 	# --- ACT --------------------------------------------------------------
-	# Abertos: API (bearer token do Fluent) e assets do build.
+	# Abertos: API (bearer token do Fluent), assets do build e o motor do
+	# respondente (/survey-test, imagens via /gallery-proxy).
 	@act_gated {
 		path /act/*
-		not path /act/api/* /act/build/*
+		not path /act/api/* /act/build/* /act/survey-test /act/gallery-proxy
 	}
 	route /act/* {
 		import fluent_session_if @act_gated
