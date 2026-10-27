@@ -1,0 +1,28 @@
+# Apps Laravel servidos pelo php-fpm (pools em ../php-fpm/), no lugar do
+# `php artisan serve`. Cada um escuta só em 127.0.0.1, na mesma porta que o
+# artisan serve usava, então os *_UPSTREAM de enquire.caddy, o forward_auth e
+# quem chama 127.0.0.1:8000 direto (tng-report-backend) não mudam.
+# Importado só pelo vps.Caddyfile.
+
+(laravel_fpm) {
+	bind 127.0.0.1
+	root * {args[0]}/public
+	php_fastcgi unix//run/php/enquire-{args[1]}.sock
+	file_server
+}
+
+http://:8000 {
+	import laravel_fpm /var/www/enquire-survey fluent
+}
+
+http://:8001 {
+	import laravel_fpm /var/www/enquire-survey-engine engine
+}
+
+http://:8003 {
+	import laravel_fpm /var/www/enquire-act-express/express express
+}
+
+http://:8004 {
+	import laravel_fpm /var/www/enquire-act-express/act act
+}
