@@ -1,0 +1,17 @@
+# Servidor de tempo real do Fluent (Laravel Reverb, protocolo Pusher).
+# Escuta só em 127.0.0.1; o Caddy expõe o WebSocket em {$APP_HOST}/app/*.
+# Instalar: cp para /etc/systemd/system && systemctl enable --now enquire-reverb
+[Unit]
+Description=Enquire Reverb (WebSocket do Fluent)
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/enquire-survey
+ExecStart=/usr/bin/php artisan reverb:start --host=127.0.0.1 --port=8008
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
