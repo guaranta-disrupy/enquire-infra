@@ -2,6 +2,7 @@
 #
 # Dois nomes públicos:
 #   {$APP_HOST}     equipe: Fluent + ACT (/act) + Express (/express) + Flask (/svc)
+#                   + WebSocket do Reverb (/app)
 #   {$SURVEY_HOST}  respondentes: Engine + Express Engine (/x) + API pública do Express
 #
 # ACT, Express e Flask NÃO têm domínio próprio: escutam só em 127.0.0.1 e são
@@ -68,6 +69,13 @@
 		import fluent_session_if @svc_gated
 		uri strip_prefix /svc
 		reverse_proxy {$FLASK_UPSTREAM}
+	}
+
+	# --- Reverb (tempo real, protocolo Pusher) ----------------------------
+	# Só o WebSocket (/app/<key>). A API HTTP (/apps/...) fica restrita ao
+	# servidor: os apps publicam direto em {$REVERB_UPSTREAM}.
+	handle /app/* {
+		reverse_proxy {$REVERB_UPSTREAM}
 	}
 
 	# --- Fluent -----------------------------------------------------------
