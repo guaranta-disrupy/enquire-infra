@@ -1,25 +1,29 @@
-# Infra local para Fluent: PHP/Composer rodam no Mac; estes serviços expõem portas em localhost.
+# Infra do Fluent (MariaDB, Mongo, Redis, Neo4j). Portas só em 127.0.0.1.
 #
-# Uso:
-#   docker compose -f docker-compose.infra.yml up -d
-#   docker compose -f docker-compose.infra.yml down
+# Uso local (Mac): docker compose -f docker-compose.infra.yml up -d
+#   Sem .env, as senhas caem nos padrões de dev abaixo.
+# Produção (VPS): docker-compose.vps.yml por cima deste arquivo (Mongo e Redis
+#   com senha, senhas obrigatórias). O .env do servidor define
+#   COMPOSE_FILE=docker-compose.infra.yml:docker-compose.vps.yml, então lá basta
+#   `docker compose up -d`.
 #
 # Laravel (.env): DB_HOST=127.0.0.1  DB_PORT=3306  DB_DATABASE=fluent (ou fluent_engine no engine)
 # Mongo: MONGODB_URI=mongodb://127.0.0.1:27017  MONGODB_DATABASE=fluent
 # Redis: REDIS_HOST=127.0.0.1  REDIS_PORT=6379
-# Neo4j: NEO4J_URI=bolt://127.0.0.1:7687  NEO4J_USERNAME=neo4j  NEO4J_PASSWORD=fluent_local_dev
+# Neo4j: NEO4J_URI=bolt://127.0.0.1:7687  NEO4J_USERNAME=neo4j  NEO4J_PASSWORD=fluent_local_dev (dev)
 
 services:
   mariadb:
     image: mariadb:11
     container_name: fluent-infra-mariadb
+    command: --max-allowed-packet=268435456
     restart: unless-stopped
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     environment:
-      MARIADB_ROOT_PASSWORD: secret
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-secret}
       MARIADB_USER: local
-      MARIADB_PASSWORD: secret
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:-secret}
       MARIADB_DATABASE: fluent
     volumes:
       - ./docker/data/mariadb:/var/lib/mysql
@@ -35,7 +39,7 @@ services:
     container_name: fluent-infra-mongodb
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      - "127.0.0.1:27017:27017"
     volumes:
       - ./docker/data/mongodb:/data/db
     command: ["mongod", "--bind_ip_all"]
@@ -45,7 +49,7 @@ services:
     container_name: fluent-infra-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - ./docker/data/redis:/data
     command: ["redis-server", "--appendonly", "yes"]
@@ -55,10 +59,10 @@ services:
     container_name: fluent-infra-neo4j
     restart: unless-stopped
     ports:
-      - "7474:7474"
-      - "7687:7687"
+      - "127.0.0.1:7474:7474"
+      - "127.0.0.1:7687:7687"
     environment:
-      NEO4J_AUTH: neo4j/fluent_local_dev
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:-fluent_local_dev}
       NEO4J_server_memory_heap_max__size: 512m
     volumes:
       - ./docker/data/neo4j:/data
