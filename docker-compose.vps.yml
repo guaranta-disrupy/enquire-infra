@@ -1,0 +1,18 @@
+# Reforço de produção, aplicado por cima de docker-compose.infra.yml.
+# As senhas vêm do .env do servidor (fora do git); sem elas o compose não sobe.
+
+services:
+  mariadb:
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:?defina no .env}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:?defina no .env}
+
+  mongodb:
+    command: ["mongod", "--bind_ip_all", "--auth"]
+
+  redis:
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?defina no .env}"]
+
+  neo4j:
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:?defina no .env}
