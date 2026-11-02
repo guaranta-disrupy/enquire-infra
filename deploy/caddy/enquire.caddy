@@ -14,24 +14,18 @@
 # Importado por Caddyfile (local) e vps.Caddyfile (servidor).
 
 # Sessão do Fluent como porteiro para as requisições do matcher {args[0]}:
-# 2xx libera; sem sessão, navegação vai para /login e XHR recebe 401.
-# A consulta vai ao Fluent como XHR/JSON: assim ele responde 401 em vez de
-# 302 e não grava a própria URL de checagem como "url.intended" (nem como
-# "_previous.url") na sessão; antes, o login seguinte levava o usuário para
-# /user/confirmed-password-status, que só mostra {"confirmed":false}.
+# 2xx libera; sem sessão, o Fluent (/auth/gate) guarda a URL original como
+# url.intended e manda navegação para /login (o login volta para a mesma
+# tela) ou devolve 401 para XHR. A resposta não-2xx chega ao navegador como
+# veio, com o cookie de sessão onde ficou o url.intended.
+# A consulta vai como XHR para o Laravel não gravá-la como _previous.url; se a
+# requisição original era XHR segue em X-Original-Requested-With.
 (fluent_session_if) {
 	forward_auth {args[0]} {$FLUENT_UPSTREAM} {
-		uri /user/confirmed-password-status
+		uri /auth/gate
 		header_up Accept application/json
 		header_up X-Requested-With XMLHttpRequest
-
-		@unauthenticated status 401
-		handle_response @unauthenticated {
-			@xhr header X-Requested-With XMLHttpRequest
-			@navigation not header X-Requested-With XMLHttpRequest
-			respond @xhr 401
-			redir @navigation /login 302
-		}
+		header_up X-Original-Requested-With {header.X-Requested-With}
 	}
 }
 
