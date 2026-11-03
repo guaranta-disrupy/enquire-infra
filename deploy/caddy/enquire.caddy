@@ -26,6 +26,16 @@
 		header_up Accept application/json
 		header_up X-Requested-With XMLHttpRequest
 		header_up X-Original-Requested-With {header.X-Requested-With}
+		# Os cabeçalhos do Inertia são do app de destino (Express/ACT), não do
+		# Fluent: com eles, o Inertia do Fluent vê versão de assets diferente e
+		# troca a resposta do porteiro por 409 -> /auth/gate.
+		header_up -X-Inertia
+		header_up -X-Inertia-Version
+		header_up -X-Inertia-Partial-Component
+		header_up -X-Inertia-Partial-Data
+		header_up -X-Inertia-Partial-Except
+		header_up -X-Inertia-Error-Bag
+		header_up -X-Inertia-Reset
 	}
 }
 
