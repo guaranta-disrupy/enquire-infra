@@ -9,13 +9,30 @@
 	}
 }
 
+# Access log por produto. Sem isto não há COMO saber se uma tentativa de acesso
+# chegou ao servidor: o journal do Caddy só guarda TLS/ACME e o gunicorn, sem
+# --access-logfile, só fala quando quebra. Já custou uma investigação às cegas.
+# `roll_keep_for` limita o histórico; `roll_size`/`roll_keep` limitam o disco.
+(tnglog) {
+	log {
+		output file /var/log/caddy/{args[0]}.log {
+			roll_size 10MiB
+			roll_keep 5
+			roll_keep_for 720h
+		}
+		format json
+	}
+}
+
 # --- Produtos TNG -----------------------------------------------------------
 report.nextsensus.com {
+	import tnglog report
 	encode zstd gzip
 	reverse_proxy 127.0.0.1:8005
 }
 
 pricing.nextsensus.com {
+	import tnglog pricing
 	encode zstd gzip
 	request_body {
 		max_size 5MB
@@ -24,6 +41,7 @@ pricing.nextsensus.com {
 }
 
 field.nextsensus.com {
+	import tnglog field
 	encode zstd gzip
 	request_body {
 		max_size 25MB
@@ -47,8 +65,13 @@ field.nextsensus.com {
 	}
 }
 
-# Acesso antigo do TNG Report pelo IP (certificado autoassinado).
+# Acesso antigo do TNG Report pelo IP. O certificado aqui é INTERNO (Caddy Local
+# Authority, 12h de validade), então todo browser barra a entrada com aviso de
+# certificado — foi exatamente assim que um usuário ficou sem conseguir entrar.
+# O endereço para divulgar é report.nextsensus.com; este vhost existe só para
+# quem ainda tem o link velho, e o log separado mostra quem ainda o usa.
 https://161.97.178.169 {
+	import tnglog report-ip
 	tls internal
 	reverse_proxy 127.0.0.1:8005
 }
