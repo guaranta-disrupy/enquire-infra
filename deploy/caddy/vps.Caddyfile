@@ -65,16 +65,16 @@ field.nextsensus.com {
 	}
 }
 
-# Acesso antigo do TNG Report pelo IP. O certificado aqui é INTERNO (Caddy Local
-# Authority, 12h de validade), então todo browser barra a entrada com aviso de
-# certificado — foi exatamente assim que um usuário ficou sem conseguir entrar.
-# O endereço para divulgar é report.nextsensus.com; este vhost existe só para
-# quem ainda tem o link velho, e o log separado mostra quem ainda o usa.
-https://161.97.178.169 {
-	import tnglog report-ip
-	tls internal
-	reverse_proxy 127.0.0.1:8005
-}
+# O acesso ao TNG Report pelo IP cru (161.97.178.169) foi REMOVIDO em 2026-11-23.
+#
+# Ele servia certificado interno (Caddy Local Authority, 12h), que todo browser
+# barra — já fez um usuário concluir que o Report estava fora do ar. Mantido por
+# um tempo só para quem tivesse o link velho, com log próprio para medir o uso.
+# O log respondeu: em 11 dias, 2.228 requisições e ZERO tentativas de login.
+# Eram todas varredura automatizada (/.env, /.git/config, phpMyAdmin, APIs de
+# Kubernetes e Ollama) — nenhuma pessoa. Nada se perde fechando.
+#
+# O endereço do Report é report.nextsensus.com.
 
 # --- Enquire / Fluent ------------------------------------------------------
 import /var/www/enquire-infra/deploy/caddy/enquire.caddy
